@@ -80,6 +80,8 @@ const Terminais = () => {
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [reloadHistory, setReloadHistory] = useState(true)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
@@ -285,19 +287,25 @@ const Terminais = () => {
     setOpenBackdrop(true);
     buscarDadosAberturaCancela();
     
-    axios.get(`http://${ip}/api/terminais`, {
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-      },
-    })
-    .then((response) => {
-      setOpenBackdrop(false);
-      setTerminais(response.data);                
-    })
-    .catch((error) => {
-      setOpenBackdrop(false);
-      console.error('Houve um erro ao buscar os terminais:', error);
-    });
+    const fetchTerminais = async () => {
+      try {
+        const response = await axios.get(`http://${ip}/api/terminais`, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+        });
+        setTerminais(response.data || []);
+      } catch (error) {
+        console.error('Houve um erro ao buscar os terminais:', error);
+        setError('Falha ao carregar os terminais. Por favor, tente novamente.');
+        showSnackbar('Falha ao carregar os terminais. Por favor, tente novamente.', 'error');
+      } finally {
+        setOpenBackdrop(false);
+        setLoading(false);
+      }
+    };
+
+    fetchTerminais();
   }, [reloadHistory]);
 
   useEffect(() => {
@@ -316,6 +324,22 @@ const Terminais = () => {
   };
   
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <>
       <Button size="small" variant="outlined" mb={3} onClick={() => setHistoricoOpen(true)}>
@@ -325,52 +349,57 @@ const Terminais = () => {
       
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', width: '55%', minWidth: '350px' }}>
         
-
-        {terminais?.map((terminal) => (
-          <StyledCard
-            key={terminal.idestacao}
-            clickable={terminal.tipo === 8 || terminal.tipo === 10}
-            onClick={(terminal.tipo === 8 || terminal.tipo === 10) 
-              ? () => handleOpen(terminal.configuracoes_lpr, terminal.descricao, terminal.enderecoip) 
-              : undefined}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: '20px' }}>                            
-              <img 
-                width={30} 
-                src={
-                  terminal.tipo === 8 ? IconEntrada : 
-                  terminal.tipo === 10 ? IconSaida : 
-                  IconCaixa
-                } 
-                alt={terminal.tipo} 
-              />
-              <Typography variant="caption">{terminal.descricao}</Typography>
-            </Box>                          
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Typography variant='caption'>
-                  {terminal.tipo === 8 ? 'Entrada' : terminal.tipo === 10 ? 'Saída' : 'Caixa'}
-                </Typography>
-                <Typography 
-                  variant='caption' 
-                  sx={{ color: terminal.status === 'online' ? 'success.main' : 'error.main' }}
-                >
-                  {terminal.status}
-                </Typography>
+        {Array.isArray(terminais) && terminais.length > 0 ? (
+          terminais.map((terminal) => (
+            <StyledCard
+              key={terminal.idestacao}
+              clickable={terminal.tipo === 8 || terminal.tipo === 10}
+              onClick={(terminal.tipo === 8 || terminal.tipo === 10) 
+                ? () => handleOpen(terminal.configuracoes_lpr, terminal.descricao, terminal.enderecoip) 
+                : undefined}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'end', gap: '20px' }}>                            
+                <img 
+                  width={30} 
+                  src={
+                    terminal.tipo === 8 ? IconEntrada : 
+                    terminal.tipo === 10 ? IconSaida : 
+                    IconCaixa
+                  } 
+                  alt={terminal.tipo} 
+                />
+                <Typography variant="caption">{terminal.descricao}</Typography>
+              </Box>                          
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Typography variant='caption'>
+                    {terminal.tipo === 8 ? 'Entrada' : terminal.tipo === 10 ? 'Saída' : 'Caixa'}
+                  </Typography>
+                  <Typography 
+                    variant='caption' 
+                    sx={{ color: terminal.status === 'online' ? 'success.main' : 'error.main' }}
+                  >
+                    {terminal.status}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-            <Divider />
-            <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>IP {terminal.enderecoip}</Typography>
-            <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>
-              Online desde: {formatDateTime(terminal.upsince)}
-            </Typography>
-            {(terminal.tipo === 8 || terminal.tipo === 10) &&
+              <Divider />
+              <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>IP {terminal.enderecoip}</Typography>
               <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>
-                Versão: {formatVersion(terminal.versaoparkingplus)}
+                Online desde: {formatDateTime(terminal.upsince)}
               </Typography>
-            }                        
-          </StyledCard>
-        ))}
+              {(terminal.tipo === 8 || terminal.tipo === 10) &&
+                <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>
+                  Versão: {formatVersion(terminal.versaoparkingplus)}
+                </Typography>
+              }                        
+            </StyledCard>
+          ))
+        ) : (
+          <Typography variant="caption" sx={{ color: 'error.main' }}>
+            Nenhum terminal encontrado.
+          </Typography>
+        )}
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', width: '40%', minWidth: '250px' }}>
