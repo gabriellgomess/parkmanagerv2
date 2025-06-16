@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1. Permite o acesso direto a arquivos no diretório /storage
+    RewriteCond %{REQUEST_URI} ^/storage/ [NC]
+    RewriteRule ^ - [L]
+
+    # 2. Ignora URLs que são arquivos ou diretórios existentes
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 3. Redirecionar URLs que começam com /api para o backend Laravel
+    RewriteCond %{REQUEST_URI} ^/api [NC]
+    RewriteRule ^api/(.*)$ /backend/public/api/$1 [L]
+
+    # 4. Roteamento padrão do Laravel (para rotas específicas do backend)
+    RewriteCond %{REQUEST_URI} ^/backend [NC]
+    RewriteRule ^backend/(.*)$ /backend/public/$1 [L]
+
+    # 5. Redirecionar todas as outras rotas para o index.html do React
+    RewriteRule ^ index.html [L]
+</IfModule>
