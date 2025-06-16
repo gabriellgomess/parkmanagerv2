@@ -242,7 +242,7 @@ const Pagamentos = () => {
         row.valorrecebido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
         row.desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
         row.nome_desconto || '-',
-        row.valor_descontado ? row.valor_descontado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-',
+        // row.valor_descontado ? row.valor_descontado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-',
         row.descformadepagamento,
         row.nometarifa,        
         row.operador
@@ -259,7 +259,7 @@ const Pagamentos = () => {
             'Valor Recebido',
             'Desconto',
             'Nome Desconto',
-            'Valor Descontado',
+            // 'Valor Descontado',
             'Forma de Pagamento',
             'Tarifa',            
             'Operador'
@@ -306,14 +306,14 @@ const Pagamentos = () => {
         filterable: false,
         renderCell: (params) => params.value || '-'
     },
-    { 
-        field: 'valor_descontado', 
-        headerName: 'Valor Descontado', 
-        width: 150, 
-        sortable: false, 
-        filterable: false,
-        renderCell: (params) => params.value ? parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
-    },
+    // { 
+    //     field: 'valor_descontado', 
+    //     headerName: 'Valor Descontado', 
+    //     width: 150, 
+    //     sortable: false, 
+    //     filterable: false,
+    //     renderCell: (params) => params.value ? parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
+    // },
     { field: 'descformadepagamento', headerName: 'Forma de Pagamento', width: 250, sortable: false, filterable: false },    
     { field: 'nometarifa', headerName: 'Tarifa', width: 150, sortable: false, filterable: false },    
     { field: 'operador', headerName: 'Operador', width: 150, sortable: false, filterable: false },
