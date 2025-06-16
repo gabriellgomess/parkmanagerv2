@@ -117,12 +117,18 @@ const Pagamentos = () => {
           ...(status_pagamento == 'todos' ? { status_pagamento: null } : { status_pagamento }),
           ...(desconto == 'todos' ? { desconto: null } : { desconto }),
           ...(tarifaSelecionada !== 'todas' ? { nometarifa: tarifaSelecionada } : {}),
-          ...(nomeDesconto && { nome_desconto: nomeDesconto }),
+          ...(nomeDesconto && { nome_desconto: encodeURIComponent(nomeDesconto) }),
           ...(order && { order }),
         },
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
+        paramsSerializer: params => {
+          return Object.entries(params)
+            .filter(([, value]) => value !== null && value !== undefined)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&');
+        }
       })
       .then((response) => {
         handleClose();
@@ -497,6 +503,9 @@ const Pagamentos = () => {
             </CardContent>
         </Card>
       </Box>
+
+      {/* Debug dos dados */}
+      {console.log('Dados para renderização:', data)}
 
       <DataGrid
         rows={data}

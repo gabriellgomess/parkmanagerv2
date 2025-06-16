@@ -60,7 +60,7 @@ class PagamentosController extends Controller
         // Filtro por nome do desconto
         if ($request->input('nome_desconto')) {
             $pagamentosQuery->where(function ($query) use ($request) {
-                $query->where('ld.nome', $request->input('nome_desconto'))
+                $query->whereRaw("ld.nome = ?", [$request->input('nome_desconto')])
                     ->whereNotNull('ld.ticket');
             });
         }
