@@ -186,14 +186,15 @@ const Terminais = () => {
   };
 
   const formatDateTime = (datetime) => {
+    if (!datetime) return '-';
     const date = new Date(datetime);
     return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
   };
 
   const formatVersion = (version) => {
-    let v = version?.split(' ');
-    let versao = v[0];
-    return 'ParkingPlus ' + versao;
+    if (!version) return '-';
+    const v = version.split(' ');
+    return v.length > 0 ? 'ParkingPlus ' + v[0] : '-';
   };
 
   const abrirCancela = async () => {
@@ -368,7 +369,7 @@ const Terminais = () => {
                   } 
                   alt={terminal.tipo} 
                 />
-                <Typography variant="caption">{terminal.descricao}</Typography>
+                <Typography variant="caption">{terminal.descricao || '-'}</Typography>
               </Box>                          
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -379,16 +380,16 @@ const Terminais = () => {
                     variant='caption' 
                     sx={{ color: terminal.status === 'online' ? 'success.main' : 'error.main' }}
                   >
-                    {terminal.status}
+                    {terminal.status || 'offline'}
                   </Typography>
                 </Box>
               </Box>
               <Divider />
-              <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>IP {terminal.enderecoip}</Typography>
+              <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>IP {terminal.enderecoip || '-'}</Typography>
               <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>
                 Online desde: {formatDateTime(terminal.upsince)}
               </Typography>
-              {(terminal.tipo === 8 || terminal.tipo === 10) &&
+              {(terminal.tipo === 8 || terminal.tipo === 10) && terminal.versaoparkingplus &&
                 <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: '3px' }}>
                   Versão: {formatVersion(terminal.versaoparkingplus)}
                 </Typography>
