@@ -51,6 +51,7 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 
     // Rotas de Pagamentos
     Route::get("pagamentos", [PagamentosController::class, "index"]);
+    Route::get("descontos", [PagamentosController::class, "getDescontos"]);
 
     // Rota para contagem de patio
     Route::get('patio', [LotController::class, 'countLots']);

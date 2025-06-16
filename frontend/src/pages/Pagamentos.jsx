@@ -42,6 +42,8 @@ const Pagamentos = () => {
   const [order, setOrder] = useState('desc');
   const [tarifas, setTarifas] = useState([]);
   const [tarifaSelecionada, setTarifaSelecionada] = useState('todas');
+  const [nomeDesconto, setNomeDesconto] = useState('');
+  const [descontosDisponiveis, setDescontosDisponiveis] = useState([]);
   const { ip } = useContext(AuthContext);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -115,6 +117,7 @@ const Pagamentos = () => {
           ...(status_pagamento == 'todos' ? { status_pagamento: null } : { status_pagamento }),
           ...(desconto == 'todos' ? { desconto: null } : { desconto }),
           ...(tarifaSelecionada !== 'todas' ? { nometarifa: tarifaSelecionada } : {}),
+          ...(nomeDesconto && { nome_desconto: nomeDesconto }),
           ...(order && { order }),
         },
         headers: {
@@ -182,9 +185,31 @@ const Pagamentos = () => {
     return datePart.split('-').reverse().join('/') + ' ' + timePart;
 };
 
+  // Buscar descontos disponíveis
+  const fetchDescontos = () => {
+    axios
+      .get(`http://${ip}/api/descontos`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        },
+      })
+      .then((response) => {
+        if (response.data && response.data.length > 0) {
+          setDescontosDisponiveis(response.data);
+        }
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar descontos:', error);
+        setSnackbarMessage('Erro ao buscar descontos disponíveis');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      });
+  };
+
   useEffect(() => {
     fetchData();
-    fetchTarifas(); // Buscar tarifas disponíveis ao carregar o componente
+    fetchTarifas();
+    fetchDescontos();
   }, []);
 
   const generatePDF = () => {
@@ -216,10 +241,11 @@ const Pagamentos = () => {
         row.valorpago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
         row.valorrecebido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
         row.desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        row.nome_desconto || '-',
+        row.valor_descontado ? row.valor_descontado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-',
         row.descformadepagamento,
         row.nometarifa,        
-        row.operador,
-        row.descformadepagamento
+        row.operador
     ]);
 
     doc.autoTable({
@@ -232,10 +258,11 @@ const Pagamentos = () => {
             'Valor Pago',
             'Valor Recebido',
             'Desconto',
+            'Nome Desconto',
+            'Valor Descontado',
             'Forma de Pagamento',
             'Tarifa',            
-            'Operador',
-            'Forma de Pagamento',   
+            'Operador'
         ],
       ],
       body: tableData,
@@ -267,9 +294,25 @@ const Pagamentos = () => {
     { 
         field: 'desconto', 
         headerName: 'Desconto', 
-        width: 100 ,
+        width: 100,
         sortable: false, filterable: false,
         renderCell: (params) => parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    },
+    { 
+        field: 'nome_desconto', 
+        headerName: 'Nome Desconto', 
+        width: 150, 
+        sortable: false, 
+        filterable: false,
+        renderCell: (params) => params.value || '-'
+    },
+    { 
+        field: 'valor_descontado', 
+        headerName: 'Valor Descontado', 
+        width: 150, 
+        sortable: false, 
+        filterable: false,
+        renderCell: (params) => params.value ? parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
     },
     { field: 'descformadepagamento', headerName: 'Forma de Pagamento', width: 250, sortable: false, filterable: false },    
     { field: 'nometarifa', headerName: 'Tarifa', width: 150, sortable: false, filterable: false },    
@@ -284,6 +327,7 @@ const Pagamentos = () => {
     setStatusPagamento('todos');
     setDesconto('todos');
     setTarifaSelecionada('todas');
+    setNomeDesconto('');
     setOrder('desc');
     fetchData();
   }
@@ -319,6 +363,19 @@ const Pagamentos = () => {
               error={placaError}
               onChange={handlePlacaChange}
             />
+            <FormControl sx={{ width: '250px' }}>
+                <InputLabel>Nome do Desconto</InputLabel>
+                <Select
+                value={nomeDesconto}
+                onChange={(e) => setNomeDesconto(e.target.value)}
+                label="Nome do Desconto"
+                >
+                <MenuItem value="">Todos</MenuItem>
+                {descontosDisponiveis.map((desconto) => (
+                  <MenuItem key={desconto.nome} value={desconto.nome}>{desconto.nome}</MenuItem>
+                ))}
+                </Select>
+            </FormControl>
             <TextField              
               label="Data Inicial"
               type="date"

@@ -21,6 +21,7 @@ class PagamentosController extends Controller
         // Construindo a consulta principal
         $pagamentosQuery = DB::table('logrotativo as p')
             ->leftJoin('formadepagamento as fp', 'p.descformadepagamento', '=', 'fp.descricao')
+            ->leftJoin('logdescontos as ld', 'p.ticket', '=', 'ld.ticket')
             ->select(
                 'p.datahoraentrada',
                 'p.datahorasaida',
@@ -32,6 +33,8 @@ class PagamentosController extends Controller
                 'p.placa',
                 'p.descformadepagamento',
                 'p.valorrecebido',
+                'ld.nome as nome_desconto',
+                'ld.valor_descontado',
                 DB::raw("CASE WHEN fp.descricao IS NOT NULL THEN 'pago' ELSE 'abononado' END as status_pagamento"),
                 DB::raw("CASE WHEN p.desconto > 0 THEN 'true' ELSE 'false' END as possui_desconto")
             )
@@ -52,6 +55,11 @@ class PagamentosController extends Controller
         // Filtro por nometarifa
         if ($nometarifa) {
             $pagamentosQuery->where('p.nometarifa', $nometarifa);
+        }
+
+        // Filtro por nome do desconto
+        if ($request->input('nome_desconto')) {
+            $pagamentosQuery->where('ld.nome', $request->input('nome_desconto'));
         }
 
         // Subconsulta para permitir o filtro no status_pagamento
@@ -78,5 +86,16 @@ class PagamentosController extends Controller
         $resultados = $pagamentos->get();
 
         return response()->json($resultados);
+    }
+
+    public function getDescontos()
+    {
+        $descontos = DB::table('logdescontos')
+            ->select('nome')
+            ->groupBy('nome')
+            ->orderBy('nome')
+            ->get();
+
+        return response()->json($descontos);
     }
 }
