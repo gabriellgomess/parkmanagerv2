@@ -55,27 +55,27 @@ const Pagamentos = () => {
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   // Buscar tarifas disponíveis
-  const fetchTarifas = () => {
-    axios
-      .get(`http://${ip}/api/tarifas`, {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-        },
-      })
-      .then((response) => {
-        // Extrair nomes de tarifas únicos do conjunto de dados
-        if (response.data && response.data.length > 0) {
-          const tarifasUnicas = [...new Set(response.data.map(item => item.nometarifa))].filter(Boolean);
-          setTarifas(tarifasUnicas.sort());
-        }
-      })
-      .catch((error) => {
-        console.error('Erro ao buscar tarifas:', error);
-        setSnackbarMessage('Erro ao buscar tarifas disponíveis');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      });
-  };
+  // const fetchTarifas = () => {
+  //   axios
+  //     .get(`http://${ip}/api/tarifas`, {
+  //       headers: {
+  //         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+  //       },
+  //     })
+  //     .then((response) => {
+  //       // Extrair nomes de tarifas únicos do conjunto de dados
+  //       if (response.data && response.data.length > 0) {
+  //         const tarifasUnicas = [...new Set(response.data.map(item => item.nometarifa))].filter(Boolean);
+  //         setTarifas(tarifasUnicas.sort());
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error('Erro ao buscar tarifas:', error);
+  //       setSnackbarMessage('Erro ao buscar tarifas disponíveis');
+  //       setSnackbarSeverity('error');
+  //       setSnackbarOpen(true);
+  //     });
+  // };
   
   // Função alternativa para extrair tarifas dos dados
   const extrairTarifasDosResultados = (dados) => {
@@ -106,6 +106,9 @@ const Pagamentos = () => {
       return;
     }
 
+    // Limpa os dados e estatísticas antes de fazer uma nova busca
+    setData([]);
+    setStats({});
     handleOpen();
     axios
       .get(`http://${ip}/api/pagamentos`, {
@@ -214,7 +217,7 @@ const Pagamentos = () => {
 
   useEffect(() => {
     fetchData();
-    fetchTarifas();
+    // fetchTarifas();
     fetchDescontos();
   }, []);
 
@@ -420,7 +423,7 @@ const Pagamentos = () => {
                 <MenuItem value="false">Não</MenuItem>
                 </Select>
             </FormControl>
-            <FormControl sx={{ width: '250px' }}>
+            {/* <FormControl sx={{ width: '250px' }}>
                 <InputLabel>Tarifa</InputLabel>
                 <Select
                 value={tarifaSelecionada}
@@ -432,7 +435,7 @@ const Pagamentos = () => {
                   <MenuItem key={tarifa} value={tarifa}>{tarifa}</MenuItem>
                 ))}
                 </Select>
-            </FormControl>
+            </FormControl> */}
             <FormControl sx={{ width: '320px' }}>
                 <InputLabel>Ordenar por data de entrada</InputLabel>
                 <Select
@@ -513,7 +516,7 @@ const Pagamentos = () => {
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         pageSize={10}
         rowsPerPageOptions={[10, 20, 50]}
-        getRowId={(row) => row.ticket}
+        getRowId={(row) => row.ticket + row.datahoraentrada + row.datahorasaida}
         autoHeight
       />
 

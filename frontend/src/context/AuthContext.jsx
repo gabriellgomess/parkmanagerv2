@@ -24,9 +24,9 @@ export const AuthProvider = ({ children }) => {
   
   const hostname = window.location.hostname;
   const port = window.location.port; 
-  // const ip = port ? `${hostname}:${port}` : hostname;
+  const ip = port ? `${hostname}:${port}` : hostname;
 
-  const ip = 'localhost:8000'; // Defina o IP do seu backend aqui
+  // const ip = 'localhost:8000'; // Defina o IP do seu backend aqui
 
   // === Autenticação ===
 
