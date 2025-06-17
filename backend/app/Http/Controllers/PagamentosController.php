@@ -57,8 +57,14 @@ class PagamentosController extends Controller
             $pagamentosQuery->where('p.nometarifa', $nometarifa);
         }
 
-        // Filtro por nome do desconto
-        if ($request->input('nome_desconto')) {
+        // Filtro por nome do desconto e data não informada, definir ultimos 30 dias
+        if ($request->input('nome_desconto') && !$dataInicial && !$dataFinal) {
+            $pagamentosQuery->where(function ($query) use ($request) {
+                $query->whereRaw("ld.nome = ?", [$request->input('nome_desconto')])
+                    ->whereNotNull('ld.ticket')
+                    ->whereBetween('p.datahoraentrada', [now()->subDays(30)->startOfDay(), now()->endOfDay()]);
+            });
+        }else{
             $pagamentosQuery->where(function ($query) use ($request) {
                 $query->whereRaw("ld.nome = ?", [$request->input('nome_desconto')])
                     ->whereNotNull('ld.ticket');
